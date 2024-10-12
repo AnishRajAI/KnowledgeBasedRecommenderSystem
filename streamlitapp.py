@@ -6,7 +6,6 @@ from sklearn.metrics.pairwise import linear_kernel
 # Set the page config at the very start
 st.set_page_config(page_title="Knowledge Based Recommender System", layout="wide")
 
-# Centered logo with better CSS
 # Connect to SQLite database
 conn = sqlite3.connect('students.db')
 c = conn.cursor()
