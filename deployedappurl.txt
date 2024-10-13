@@ -1,1 +1,2 @@
-https://miniprojectai701.streamlit.app/
+Recommender System URL: https://miniprojectai701.streamlit.app/
+Student Database Management System: https://studentdatabasemanagement19ai701.streamlit.app/?refresh=true
