@@ -96,7 +96,7 @@ def login_form():
             st.session_state['logged_in'] = True
             st.session_state['username'] = username
             st.success("Login successful!")
-            st.experimental_set_query_params(logged_in="true")  # Refresh UI after login
+            st.experimental_rerun()  # Refresh UI after login
         else:
             st.error("Invalid username or password")
 
@@ -104,7 +104,11 @@ def manage_students():
     # Display current students
     st.subheader("Current Students")
     students = get_students()
-    st.dataframe(students)
+
+    if students.empty:
+        st.write("No students in the database.")
+    else:
+        st.dataframe(students)
 
     # Create three tabs for Add, Edit, and Delete
     tab1, tab2, tab3 = st.tabs(["Add Student", "Edit Student", "Delete Student"])
@@ -125,7 +129,7 @@ def manage_students():
         if st.button("Add Student", key="add_btn"):
             if add_student(name, department, year, interests, linkedin_id, phone_number, email, user_id, password):
                 st.success("Student added successfully!")
-                st.experimental_set_query_params(refresh="true")  # Simulate page refresh
+                st.experimental_rerun()  # Refresh page to reflect the new student
             else:
                 st.error("Email or User ID already exists!")
 
@@ -151,7 +155,7 @@ def manage_students():
             if st.button("Update Student", key="update_btn"):
                 update_student(student_id, name, department, year, interests, linkedin_id, phone_number, email, user_id, password)
                 st.success("Student updated successfully!")
-                st.experimental_set_query_params(refresh="true")  # Simulate page refresh
+                st.experimental_rerun()  # Refresh page to reflect updates
 
     # Delete student tab
     with tab3:
@@ -161,7 +165,7 @@ def manage_students():
         if st.button("Delete Student", key="delete_btn"):
             delete_student(student_id)
             st.success("Student deleted successfully!")
-            st.experimental_set_query_params(refresh="true")  # Simulate page refresh
+            st.experimental_rerun()  # Refresh page to reflect deletion
 
 if __name__ == "__main__":
     main()
