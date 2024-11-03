@@ -41,7 +41,7 @@ st.markdown("""
 st.markdown('<div class="title">Knowledge Based Recommender System</div>', unsafe_allow_html=True)
 st.markdown('<div class="quote">Networking is not just about connecting people; it\'s about connecting people with ideas, and opportunities</div>', unsafe_allow_html=True)
 # Display the centered subheader
-st.markdown('<h2 style="text-align: center;color: #007BFF">Login as Student or Admin</h2>', unsafe_allow_html=True)
+st.markdown('<h2 style="text-align: center;color: #007BFF">Login as User or Admin</h2>', unsafe_allow_html=True)
 
 # Connect to SQLite database
 def create_connection():
@@ -156,7 +156,8 @@ def main():
         st.session_state['logged_in'] = False
     if 'username' not in st.session_state:
         st.session_state['username'] = ""
-
+    if 'show_registration' not in st.session_state:
+        st.session_state['show_registration'] = False
 
     # Admin login/logout functionality
     if st.session_state['logged_in']:
@@ -173,14 +174,13 @@ def main():
         login_form()
 
 def login_form():
-    
     col1, col2 = st.columns(2)
 
     with col1:
-        st.markdown("### Student Login")
+        st.markdown("### User Login")
         user_id = st.text_input("User ID", key="login_user_id")
         password = st.text_input("Password", type='password', key="login_password")
-        if st.button("Login as Student"):
+        if st.button("Login as User"):
             if verify_user(user_id, password):
                 st.session_state['logged_in'] = True
                 st.session_state['username'] = user_id
@@ -188,7 +188,7 @@ def login_form():
                 st.success("Login successful! 🎉")
             else:
                 st.error("Invalid User ID or Password.")
-    
+        
     with col2:
         st.markdown("### Admin Login")
         admin_user = st.text_input("Admin Username", key="admin_user")
@@ -201,6 +201,35 @@ def login_form():
                 st.success("Admin Login successful! 🎉")
             else:
                 st.error("Invalid Admin Username or Password.")
+
+    # Register button
+    if st.button("Register New User"):
+        st.session_state['show_registration'] = not st.session_state['show_registration']
+    st.markdown("Forgot password, please contact [admin@gmail.com](mailto:admin@gmail.com)")
+    # Registration Form
+    if st.session_state['show_registration']:
+        st.markdown("### New User Registration")
+        with st.form(key='register_form'):
+            name = st.text_input("Name")
+            department = st.text_input("Department")
+            year = st.number_input("Year", min_value=1, max_value=4)
+            interests = st.text_input("Interests (comma separated)")
+            linkedin_id = st.text_input("LinkedIn ID")
+            phone_number = st.text_input("Phone Number")
+            email = st.text_input("Email")
+            user_id_reg = st.text_input("User ID")
+            password_reg = st.text_input("Password", type='password')
+
+            submit_button = st.form_submit_button("Register")
+
+            if submit_button:
+                if not (name and department and year and interests and email and user_id_reg and password_reg):
+                    st.error("All fields are required!")
+                else:
+                    if add_student(name, department, year, interests, linkedin_id, phone_number, email, user_id_reg, password_reg):
+                        st.success("Student registered successfully! 🎉")
+                    else:
+                        st.error("Failed to register. User ID or Email might be already in use.")
 
 def logout():
     st.session_state['logged_in'] = False
@@ -216,7 +245,7 @@ def display_matches(matched_students):
         st.write("No connections found.")
 
 def manage_students():
-    st.subheader("Manage Students")
+    st.subheader("Database")
     students = get_students()
     st.dataframe(students)
 
