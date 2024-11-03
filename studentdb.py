@@ -2,9 +2,31 @@ import streamlit as st
 import sqlite3
 import pandas as pd
 
+# Set up the page configuration
+st.set_page_config(page_title="Student Database", page_icon="logo.jpg", layout="wide")
+
 # Admin credentials (hardcoded for simplicity)
 ADMIN_USER = "admin"
 ADMIN_PASSWORD = "password123"
+
+st.sidebar.image("logo.jpg", width=300)  # Adjust the path and width as needed
+st.sidebar.markdown(""" 
+    <h1 style='text-align: center; font-size: 28px; font-weight: bold; color: #007BFF; font-family: "Helvetica", sans-serif;'>Welcome to Saveetha Engineering College</h1>
+""", unsafe_allow_html=True)
+
+st.markdown(""" 
+    <style>
+        .title {
+            font-size: 36px;
+            font-weight: bold;
+            color: #007BFF;
+            text-align: center;
+            margin-bottom: 20px;
+            font-family: 'Helvetica', sans-serif;
+        }
+    </style>
+""", unsafe_allow_html=True)
+st.markdown('<div class="title">Knowledge Based Recommender System</div>', unsafe_allow_html=True)
 
 # Connect to SQLite database
 def create_connection():
@@ -15,19 +37,19 @@ def create_connection():
 def create_table():
     conn = create_connection()
     with conn:
-        conn.execute('''
-            CREATE TABLE IF NOT EXISTS students (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT NOT NULL,
-                department TEXT NOT NULL,
-                year INTEGER NOT NULL,
-                interests TEXT NOT NULL,
-                linkedin_id TEXT,
-                phone_number TEXT,
-                email TEXT UNIQUE NOT NULL,
-                user_id TEXT UNIQUE NOT NULL,
-                password TEXT NOT NULL
-            )
+        conn.execute(''' 
+            CREATE TABLE IF NOT EXISTS students ( 
+                id INTEGER PRIMARY KEY AUTOINCREMENT, 
+                name TEXT NOT NULL, 
+                department TEXT NOT NULL, 
+                year INTEGER NOT NULL, 
+                interests TEXT NOT NULL, 
+                linkedin_id TEXT, 
+                phone_number TEXT, 
+                email TEXT UNIQUE NOT NULL, 
+                user_id TEXT UNIQUE NOT NULL, 
+                password TEXT NOT NULL 
+            ) 
         ''')
     conn.close()
 
@@ -36,9 +58,9 @@ def add_student(name, department, year, interests, linkedin_id, phone_number, em
     conn = create_connection()
     try:
         with conn:
-            conn.execute('''
-                INSERT INTO students (name, department, year, interests, linkedin_id, phone_number, email, user_id, password)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            conn.execute(''' 
+                INSERT INTO students (name, department, year, interests, linkedin_id, phone_number, email, user_id, password) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) 
             ''', (name, department, year, interests, linkedin_id, phone_number, email, user_id, password))
         return True
     except sqlite3.IntegrityError:
@@ -50,10 +72,10 @@ def add_student(name, department, year, interests, linkedin_id, phone_number, em
 def update_student(student_id, name, department, year, interests, linkedin_id, phone_number, email, user_id, password):
     conn = create_connection()
     with conn:
-        conn.execute('''
-            UPDATE students
-            SET name = ?, department = ?, year = ?, interests = ?, linkedin_id = ?, phone_number = ?, email = ?, user_id = ?, password = ?
-            WHERE id = ?
+        conn.execute(''' 
+            UPDATE students 
+            SET name = ?, department = ?, year = ?, interests = ?, linkedin_id = ?, phone_number = ?, email = ?, user_id = ?, password = ? 
+            WHERE id = ? 
         ''', (name, department, year, interests, linkedin_id, phone_number, email, user_id, password, student_id))
     conn.close()
 
@@ -73,32 +95,45 @@ def get_students():
 
 # Streamlit UI
 def main():
-    st.title("Student Database Management")
+    # Define colors and styles
+    primary_color = "#4B8BE1"
+    background_color = "#F5F5F5"
+    text_color = "#333333"
+
+    st.markdown(f'<style>body{{background-color: {background_color};}}</style>', unsafe_allow_html=True)
+
+    st.title("Student Database")
     create_table()
 
-    # Admin login
+    # Admin login/logout functionality
     if 'logged_in' not in st.session_state:
         st.session_state['logged_in'] = False
 
-    if not st.session_state['logged_in']:
-        login_form()
-    else:
+    if st.session_state['logged_in']:
+        st.sidebar.button("Logout", on_click=logout)
         st.success(f"Logged in as: {st.session_state['username']}")
         manage_students()
+    else:
+        login_form()
 
 def login_form():
     st.subheader("Admin Login")
-    username = st.text_input("Username")
-    password = st.text_input("Password", type='password')
-    
+    username = st.text_input("Username", key="username_input")
+    password = st.text_input("Password", type='password', key="password_input")
+
     if st.button("Login"):
         if username == ADMIN_USER and password == ADMIN_PASSWORD:
             st.session_state['logged_in'] = True
             st.session_state['username'] = username
             st.success("Login successful!")
-            st.experimental_set_query_params(logged_in="true")  # Refresh UI after login
+            st.query_params["logged_in"] = "true"  # Refresh UI after login
         else:
             st.error("Invalid username or password")
+
+def logout():
+    st.session_state['logged_in'] = False
+    st.session_state['username'] = ""
+    st.query_params.clear()  # Clear query parameters on logout
 
 def manage_students():
     # Display current students
@@ -125,7 +160,7 @@ def manage_students():
         if st.button("Add Student", key="add_btn"):
             if add_student(name, department, year, interests, linkedin_id, phone_number, email, user_id, password):
                 st.success("Student added successfully!")
-                st.experimental_set_query_params(refresh="true")  # Simulate page refresh
+                st.query_params["refresh"] = "true"  # Simulate page refresh
             else:
                 st.error("Email or User ID already exists!")
 
@@ -151,7 +186,7 @@ def manage_students():
             if st.button("Update Student", key="update_btn"):
                 update_student(student_id, name, department, year, interests, linkedin_id, phone_number, email, user_id, password)
                 st.success("Student updated successfully!")
-                st.experimental_set_query_params(refresh="true")  # Simulate page refresh
+                st.query_params["refresh"] = "true"  # Simulate page refresh
 
     # Delete student tab
     with tab3:
@@ -161,7 +196,7 @@ def manage_students():
         if st.button("Delete Student", key="delete_btn"):
             delete_student(student_id)
             st.success("Student deleted successfully!")
-            st.experimental_set_query_params(refresh="true")  # Simulate page refresh
+            st.query_params["refresh"] = "true"  # Simulate page refresh
 
 if __name__ == "__main__":
     main()

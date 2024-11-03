@@ -4,7 +4,40 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import linear_kernel
 
 # Set the page config at the very start
-st.set_page_config(page_title="Knowledge Based Recommender System", layout="wide")
+st.set_page_config(page_title="Knowledge Based Recommender System", layout="wide", page_icon="logo.jpg")  # Add favicon here
+
+st.sidebar.image("logo.jpg", width=300)  # Adjust the path and width as needed
+st.sidebar.markdown(""" 
+    <h1 style='text-align: center; font-size: 28px; font-weight: bold; color: #007BFF; font-family: "Helvetica", sans-serif;'>Welcome to Saveetha Engineering College</h1>
+""", unsafe_allow_html=True)
+
+st.markdown(""" 
+    <style>
+        body {
+            background-color: #f0f2f5;
+        }
+        .title {
+            font-size: 36px;
+            font-weight: bold;
+            color: #007BFF;
+            text-align: center;
+            margin-bottom: 20px;
+            font-family: 'Helvetica', sans-serif;
+        }
+        .quote {
+            font-size: 20px;
+            font-style: italic;
+            color: #888;
+            text-align: center;
+            margin: 10px 0;
+            font-family: 'Helvetica', serif;
+        }
+    </style>
+""", unsafe_allow_html=True)
+
+# Title and Quote
+st.markdown('<div class="title">Knowledge Based Recommender System</div>', unsafe_allow_html=True)
+st.markdown('<div class="quote">Networking is not just about connecting people; it\'s about connecting people with ideas, and opportunities</div>', unsafe_allow_html=True)
 
 # Connect to SQLite database
 conn = sqlite3.connect('students.db')
@@ -128,24 +161,22 @@ def find_matches(user_id):
 
     return matched_students  # Return the matched students (up to 2)
 
-# Main Application
-st.title("Knowledge Based Recommender System", anchor='header')
-
 if 'form_type' not in st.session_state:
     st.session_state.form_type = 'login'  # Default to login
+if 'logged_in' not in st.session_state:
+    st.session_state.logged_in = False  # Track whether the user is logged in
 
-# Function to display matched students
 # Function to display matched students
 def display_matches(user_id):
     matched_students = find_matches(user_id)
-    st.subheader("Connected Students:")  # Changed from "Matched Students" to "Connected Students"
-    if matched_students:  # Check if any matches were found
+    st.subheader("Connected Students:")
+    if matched_students:
         for student in matched_students:
-            st.write(f"**{student}**")  # Display matched student name
+            st.write(f"**{student}**")
             # Retrieve and display student email for collaboration
             c.execute('SELECT email FROM students WHERE name = ?', (student,))
             email = c.fetchone()[0]
-            st.write(f"Email: {email}")  # Display email
+            st.write(f"Email: {email}")
     else:
         st.write("No connections found.")
 
@@ -156,49 +187,59 @@ def toggle_form():
     else:
         st.session_state.form_type = 'login'
 
-if st.session_state.form_type == 'login':
-    st.header("Login")
-    user_id = st.text_input("User ID", key="login_user_id")
-    password = st.text_input("Password", type='password', key="login_password")
+def logout():
+    st.session_state.logged_in = False
+    st.session_state.form_type = 'login'
+    st.success("You have been logged out successfully.")
 
-    if st.button("Login", key="login_button"):
-        if user_id and password:  # Check for null login
-            if verify_user(user_id, password):
-                st.success("Login successful! 🎉")
-                display_matches(user_id)  # Direct to Find Match page
-            else:
-                st.error("Invalid User ID or Password.")
-        else:
-            st.error("Please enter User ID and Password!")  # Error for null login
-
-    st.button("Don't have an account? Register here!", on_click=toggle_form)
-
+if st.session_state.logged_in:
+    st.sidebar.button("Logout", on_click=logout)
+    display_matches(st.session_state.user_id)  # Display matches after login
 else:
-    st.header("Register")
-    with st.form(key='register_form'):
-        name = st.text_input("Name")
-        department = st.text_input("Department")
-        year = st.number_input("Year", min_value=1, max_value=4)
-        interests = st.text_input("Interests (comma separated)")
-        linkedin_id = st.text_input("LinkedIn ID")
-        phone_number = st.text_input("Phone Number")
-        email = st.text_input("Email")
-        user_id_reg = st.text_input("User ID")
-        password_reg = st.text_input("Password", type='password')
+    if st.session_state.form_type == 'login':
+        st.header("Login")
+        user_id = st.text_input("User ID", key="login_user_id")
+        password = st.text_input("Password", type='password', key="login_password")
 
-        submit_button = st.form_submit_button("Register")
-
-        if submit_button:
-            if not (name and department and year and interests and email and user_id_reg and password_reg):
-                st.error("All fields are required!")
-            else:
-                if add_student(name, department, year, interests, linkedin_id, phone_number, email, user_id_reg, password_reg):
-                    st.success("Student registered successfully! 🎉")
-                    toggle_form()  # Switch back to login form after successful registration
+        if st.button("Login", key="login_button"):
+            if user_id and password:
+                if verify_user(user_id, password):
+                    st.session_state.logged_in = True
+                    st.session_state.user_id = user_id
+                    st.success("Login successful! 🎉")
                 else:
-                    st.error("Failed to register. User ID or Email might be already in use.")
+                    st.error("Invalid User ID or Password.")
+            else:
+                st.error("Please enter User ID and Password!")
 
-    st.button("Already have an account? Login here!", on_click=toggle_form)
+        st.button("Don't have an account? Register here!", on_click=toggle_form)
+        st.markdown("If you forgot your password, please contact [admin@gmail.com](mailto:admin@gmail.com).")
+    else:
+        st.header("Register")
+        with st.form(key='register_form'):
+            name = st.text_input("Name")
+            department = st.text_input("Department")
+            year = st.number_input("Year", min_value=1, max_value=4)
+            interests = st.text_input("Interests (comma separated)")
+            linkedin_id = st.text_input("LinkedIn ID")
+            phone_number = st.text_input("Phone Number")
+            email = st.text_input("Email")
+            user_id_reg = st.text_input("User ID")
+            password_reg = st.text_input("Password", type='password')
+
+            submit_button = st.form_submit_button("Register")
+
+            if submit_button:
+                if not (name and department and year and interests and email and user_id_reg and password_reg):
+                    st.error("All fields are required!")
+                else:
+                    if add_student(name, department, year, interests, linkedin_id, phone_number, email, user_id_reg, password_reg):
+                        st.success("Student registered successfully! 🎉")
+                        toggle_form()  # Switch back to login form after successful registration
+                    else:
+                        st.error("Failed to register. User ID or Email might be already in use.")
+
+        st.button("Already have an account? Login here!", on_click=toggle_form)
 
 # Close the database connection
 conn.close()
